@@ -1,0 +1,5 @@
+bin/
+/gumlet
+*.exe
+dist/
+.DS_Store
