@@ -11,6 +11,8 @@ import (
 var (
 	sourceCreateName      string
 	sourceCreateType      string
+	sourceCreateNamespace string
+	sourceCreateCDNType   string
 	sourceCreateOriginURL string
 	sourceCreateBucket    string
 	sourceCreateRegion    string
@@ -28,6 +30,8 @@ func init() {
 
 	sourceCreateCmd.Flags().StringVar(&sourceCreateName, "name", "", "Source name (required)")
 	sourceCreateCmd.Flags().StringVar(&sourceCreateType, "type", "", "Source type: s3, gcs, do_spaces, web_folder, custom (required)")
+	sourceCreateCmd.Flags().StringVar(&sourceCreateNamespace, "namespace", "", "Subdomain namespace, becomes <namespace>.gumlet.io (required)")
+	sourceCreateCmd.Flags().StringVar(&sourceCreateCDNType, "cdn-type", "gumlet", "CDN type (default: gumlet)")
 	sourceCreateCmd.Flags().StringVar(&sourceCreateOriginURL, "origin-url", "", "Origin URL (for web_folder/custom)")
 	sourceCreateCmd.Flags().StringVar(&sourceCreateBucket, "bucket", "", "Bucket name (for s3/gcs/do_spaces)")
 	sourceCreateCmd.Flags().StringVar(&sourceCreateRegion, "region", "", "Region (for s3/do_spaces)")
@@ -35,6 +39,7 @@ func init() {
 	sourceCreateCmd.Flags().StringVar(&sourceCreateSecretKey, "secret-key", "", "Secret key (for s3/do_spaces)")
 	sourceCreateCmd.MarkFlagRequired("name")
 	sourceCreateCmd.MarkFlagRequired("type")
+	sourceCreateCmd.MarkFlagRequired("namespace")
 
 	sourceUpdateCmd.Flags().StringVar(&sourceCreateName, "name", "", "New source name")
 	sourceUpdateCmd.Flags().StringVar(&sourceCreateOriginURL, "origin-url", "", "New origin URL")
@@ -94,24 +99,61 @@ var sourceCreateCmd = &cobra.Command{
 			return err
 		}
 
+		// Map CLI type values to API type enum values
+		apiType := sourceCreateType
+		if apiType == "web_folder" {
+			apiType = "webfolder"
+		}
+
 		body := map[string]any{
-			"name":        sourceCreateName,
-			"source_type": sourceCreateType,
+			"name":      sourceCreateName,
+			"type":      apiType,
+			"namespace": sourceCreateNamespace,
+			"cdn_type":  sourceCreateCDNType,
 		}
-		if sourceCreateOriginURL != "" {
-			body["origin_url"] = sourceCreateOriginURL
-		}
-		if sourceCreateBucket != "" {
-			body["bucket"] = sourceCreateBucket
-		}
-		if sourceCreateRegion != "" {
-			body["region"] = sourceCreateRegion
-		}
-		if sourceCreateAccessKey != "" {
-			body["access_key_id"] = sourceCreateAccessKey
-		}
-		if sourceCreateSecretKey != "" {
-			body["secret_access_key"] = sourceCreateSecretKey
+
+		// Build nested config object keyed by type
+		switch apiType {
+		case "webfolder", "custom":
+			if sourceCreateOriginURL != "" {
+				body[apiType] = map[string]any{"base_url": sourceCreateOriginURL}
+			}
+		case "s3":
+			s3Config := map[string]any{}
+			if sourceCreateBucket != "" {
+				s3Config["bucket"] = sourceCreateBucket
+			}
+			if sourceCreateRegion != "" {
+				s3Config["region"] = sourceCreateRegion
+			}
+			if sourceCreateAccessKey != "" {
+				s3Config["access_key_id"] = sourceCreateAccessKey
+			}
+			if sourceCreateSecretKey != "" {
+				s3Config["secret_access_key"] = sourceCreateSecretKey
+			}
+			body["s3"] = s3Config
+		case "gcs":
+			gcsConfig := map[string]any{}
+			if sourceCreateBucket != "" {
+				gcsConfig["bucket"] = sourceCreateBucket
+			}
+			body["gcs"] = gcsConfig
+		case "do_spaces":
+			doConfig := map[string]any{}
+			if sourceCreateBucket != "" {
+				doConfig["bucket"] = sourceCreateBucket
+			}
+			if sourceCreateRegion != "" {
+				doConfig["region"] = sourceCreateRegion
+			}
+			if sourceCreateAccessKey != "" {
+				doConfig["access_key_id"] = sourceCreateAccessKey
+			}
+			if sourceCreateSecretKey != "" {
+				doConfig["secret_access_key"] = sourceCreateSecretKey
+			}
+			body["do_spaces"] = doConfig
 		}
 
 		data, err := c.Post(context.Background(), "v1/image/sources", body)
