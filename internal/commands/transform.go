@@ -218,4 +218,3 @@ func humanSize(bytes int64) string {
 	mb := kb / 1024
 	return fmt.Sprintf("%.1f MB", mb)
 }
-
