@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nicolasacchi/gumlet/internal/redact"
+	"github.com/nicolasacchi/clicore/redact"
 )
 
 const (
