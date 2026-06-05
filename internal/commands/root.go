@@ -1,6 +1,7 @@
 package commands
 
 import (
+	cliout "github.com/nicolasacchi/clicore/output"
 	"github.com/nicolasacchi/gumlet/internal/client"
 	"github.com/nicolasacchi/gumlet/internal/config"
 	"github.com/nicolasacchi/gumlet/internal/output"
@@ -59,6 +60,9 @@ func isJSONMode() bool {
 }
 
 func printData(command string, data []byte) error {
+	// Agent-mode row cap: gumlet has no list-limit flag, so under CLAUDECODE an
+	// unbounded array (e.g. source list) caps to AgentRowCap; humans unbounded.
+	data = cliout.CapAgentArray(data, 0)
 	return output.PrintData(command, data, isJSONMode(), jqFlag)
 }
 
