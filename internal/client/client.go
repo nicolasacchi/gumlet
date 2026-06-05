@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/nicolasacchi/gumlet/internal/redact"
 )
 
 const (
@@ -102,9 +104,9 @@ func (c *Client) doRequest(ctx context.Context, method, rawURL string, body io.R
 	}
 
 	if c.verbose {
-		fmt.Fprintf(os.Stderr, "> %s %s\n", method, rawURL)
+		fmt.Fprintf(os.Stderr, "> %s %s\n", method, redact.URL(rawURL))
 		if len(bodyBytes) > 0 {
-			fmt.Fprintf(os.Stderr, "> Body: %s\n", string(bodyBytes))
+			fmt.Fprintf(os.Stderr, "> Body: %s\n", redact.Body(bodyBytes))
 		}
 	}
 
@@ -131,7 +133,7 @@ func (c *Client) doRequest(ctx context.Context, method, rawURL string, body io.R
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if c.verbose {
-			fmt.Fprintf(os.Stderr, "< Body: %s\n", string(respBody))
+			fmt.Fprintf(os.Stderr, "< Body: %s\n", redact.Body(respBody))
 		}
 		return nil, c.parseError(respBody, resp.StatusCode, rawURL)
 	}

@@ -74,6 +74,8 @@ Switch projects: `gumlet --project staging source list`
 | `--jq` | | Apply gjson path filter to JSON output |
 | `--verbose` | `-v` | Print request/response details to stderr |
 | `--quiet` | `-q` | Suppress non-error output |
+| `--yes` / `--confirm` | | Confirm destructive operations (`source delete`, `cache purge`) |
+| `--dry-run` | | Print the intended mutation and exit without sending |
 
 ## Output
 
@@ -99,6 +101,10 @@ gumlet source list --jq '#.{id:id,name:name}'  # Extract fields
 | 1 | API or generic error |
 | 2 | CLI usage error |
 | 3 | Authentication error (401/403) |
+| 6 | Write refused — confirmation required (`write_locked`); re-run with `--yes` |
+
+Destructive verbs (`source delete`, `cache purge`) refuse unless `--yes`/`--confirm`
+is passed (exit 6); `--dry-run` previews without sending. Automation must pass `--yes`.
 
 ## Commands
 

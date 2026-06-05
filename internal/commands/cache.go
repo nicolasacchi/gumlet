@@ -85,6 +85,12 @@ Examples:
 			return nil
 		}
 
+		// A real purge evicts CDN cache irreversibly — require explicit intent.
+		// (--dry-run above already previews without sending.)
+		if err := requireConfirm(fmt.Sprintf("purging %d URL(s)", len(urls))); err != nil {
+			return err
+		}
+
 		if subdomain == "" {
 			// Try to extract subdomain from the first URL
 			subdomain = extractSubdomain(urls[0])
