@@ -28,6 +28,9 @@ func TestLoadAPIKey_EnvVar(t *testing.T) {
 }
 
 func TestLoadAPIKey_AltEnvVar(t *testing.T) {
+	// GUMLET_API_KEY takes precedence over GUMLET_KEY, so clear any ambient one
+	// (a real key in the dev shell) — otherwise this test is non-hermetic.
+	t.Setenv("GUMLET_API_KEY", "")
 	t.Setenv("GUMLET_KEY", "alt-key")
 	key, err := LoadAPIKey("", "")
 	if err != nil {
