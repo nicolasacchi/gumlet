@@ -18,7 +18,6 @@ var (
 	cacheFile      string
 	cacheStdin     bool
 	cachePath      string
-	cacheDryRun    bool
 	cacheBatchSize int
 )
 
@@ -37,8 +36,8 @@ func init() {
 	cachePurgeCmd.Flags().StringVar(&cacheFile, "file", "", "File with URLs to purge (one per line)")
 	cachePurgeCmd.Flags().BoolVar(&cacheStdin, "stdin", false, "Read URLs from stdin (one per line)")
 	cachePurgeCmd.Flags().StringVar(&cachePath, "path", "", "Path pattern to purge (requires --subdomain)")
-	cachePurgeCmd.Flags().BoolVar(&cacheDryRun, "dry-run", false, "Show URLs that would be purged without executing")
 	cachePurgeCmd.Flags().IntVar(&cacheBatchSize, "batch-size", 50, "URLs per API call")
+	// --dry-run is the root persistent flag (see confirm.go); no local shadow.
 }
 
 var cacheCmd = &cobra.Command{
@@ -69,7 +68,7 @@ Examples:
 			return fmt.Errorf("no URLs provided — use --url, --urls, --file, --stdin, or --path")
 		}
 
-		if cacheDryRun {
+		if dryRun() {
 			if isJSONMode() {
 				var results []PurgeResult
 				for _, u := range urls {
