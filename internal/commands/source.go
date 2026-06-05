@@ -199,6 +199,13 @@ var sourceDeleteCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		if dryRun() {
+			fmt.Fprintf(cmd.OutOrStdout(), "--dry-run: would delete source %s, no changes made\n", args[0])
+			return nil
+		}
+		if err := requireConfirm(fmt.Sprintf("deleting source %s", args[0])); err != nil {
+			return err
+		}
 		if err := c.Delete(context.Background(), "v1/image/sources/"+args[0]); err != nil {
 			return err
 		}
