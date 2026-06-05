@@ -99,9 +99,13 @@ gumlet source list --jq '#.{id:id,name:name}'  # Extract fields
 |------|---------|
 | 0 | Success |
 | 1 | API or generic error |
-| 2 | CLI usage error |
-| 3 | Authentication error (401/403) |
+| 2 | Auth error (401/403) |
+| 3 | Validation (400) |
+| 4 | Not found (404) |
+| 5 | Rate limited (429) |
 | 6 | Write refused — confirmation required (`write_locked`); re-run with `--yes` |
+
+Fleet-canonical table (`clicore/cierrors.ExitCodeFor`). **Changed:** auth was `3`, now `2`; CLI usage errors surface via cobra (exit 1).
 
 Destructive verbs (`source delete`, `cache purge`) refuse unless `--yes`/`--confirm`
 is passed (exit 6); `--dry-run` previews without sending. Automation must pass `--yes`.
